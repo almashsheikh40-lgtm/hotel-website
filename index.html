@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ND Hotel • Booking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card:#111827;
+      --accent:#22c55e;
+      --accent-2:#38bdf8;
+      --text:#f8fafc;
+      --muted:#94a3b8;
+      --danger:#ef4444;
+      --warning:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:linear-gradient(120deg,#0b1221,#0f172a 40%,#0b1221);color:var(--text);font-family:Poppins,system-ui,Segoe UI,Arial}
+    a{text-decoration:none;color:inherit}
+
+    /* Layout */
+    header{
+      position:sticky;top:0;z-index:10;
+      backdrop-filter:blur(8px);
+      background:rgba(15,23,42,.6);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .nav{
+      max-width:1100px;margin:0 auto;padding:14px 20px;
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand-logo{
+      width:40px;height:40px;border-radius:10px;
+      background:radial-gradient(circle at 30% 30%, var(--accent), #16a34a 60%, #064e3b);
+      box-shadow:0 0 20px rgba(34,197,94,.4);
+    }
+    .brand h1{font-size:20px;margin:0;font-weight:600;letter-spacing:.5px}
+    .nav .pill{
+      padding:8px 14px;border:1px solid rgba(255,255,255,.12);
+      border-radius:999px;color:var(--muted)
+    }
+
+    .hero{
+      max-width:1100px;margin:30px auto;padding:30px 20px;
+      display:grid;grid-template-columns:1.2fr .9fr;gap:24px;
+    }
+    .card{
+      background:linear-gradient(180deg, rgba(17,24,39,.7), rgba(17,24,39,.4));
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.35);
+      overflow:hidden;position:relative;
+    }
+    .card-header{
+      padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;align-items:center;justify-content:space-between
+    }
+    .card-header h2{margin:0;font-size:18px}
+    .card-body{padding:20px}
+
+    /* Rooms grid */
+    .rooms{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+    @media (max-width:1024px){.rooms{grid-template-columns:repeat(3,1fr)}}
+    @media (max-width:640px){.rooms{grid-template-columns:repeat(2,1fr)}}
+    .room{
+      background:rgba(2,6,23,.35);border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;overflow:hidden;transition:transform .25s ease, box-shadow .25s ease
+    }
+    .room:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .room-img{height:120px;background:#0b132b;position:relative;overflow:hidden}
+    .room-img img{width:100%;height:100%;object-fit:cover;filter:saturate(1.15) contrast(1.05)}
+    .room-info{padding:12px}
+    .room-title{font-size:14px;margin:0 0 6px}
+    .badge{
+      display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;
+      background:rgba(56,189,248,.18);color:#c2f2ff;border:1px solid rgba(56,189,248,.28)
+    }
+    .price{margin-top:8px;font-weight:600}
+
+    /* Form */
+    form{display:grid;gap:12px}
+    label{font-size:13px;color:var(--muted)}
+    input,select,button,textarea{
+      width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.12);
+      background:rgba(2,6,23,.35);color:var(--text);outline:none
+    }
+    input::placeholder{color:#64748b}
+    select{cursor:pointer}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .muted{color:var(--muted);font-size:13px}
+    .total{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px;border-radius:12px;background:rgba(2,6,23,.5);border:1px solid rgba(255,255,255,.1)
+    }
+    .total .value{font-size:18px;font-weight:600}
+
+    .btn{
+      background:linear-gradient(90deg, var(--accent), #10b981);
+      border:none;color:#062e13;font-weight:700;cursor:pointer;
+      box-shadow:0 8px 20px rgba(16,185,129,.35);transition:transform .18s ease, box-shadow .18s ease
+    }
+    .btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(16,185,129,.45)}
+    .btn[disabled]{opacity:.5;cursor:not-allowed}
+
+    /* Pay button hidden until valid */
+    #payNow{display:none}
+
+    /* Payment modal */
+    .modal-backdrop{
+      position:fixed;inset:0;background:rgba(2,6,23,.6);backdrop-filter:blur(6px);
+      display:none;align-items:center;justify-content:center;z-index:50
+    }
+    .modal{
+      width:96%;max-width:520px;background:linear-gradient(180deg, rgba(17,24,39,.92), rgba(17,24,39,.8));
+      border:1px solid rgba(255,255,255,.12);border-radius:16px;overflow:hidden
+    }
+    .modal-header{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center}
+    .modal-body{padding:18px}
+    .modal-actions{padding:16px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:10px;justify-content:flex-end}
+    .close{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:var(--text);cursor:pointer}
+
+    /* Payment method cards */
+    .pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+    .method{
+      border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:14px;background:rgba(2,6,23,.35);
+      cursor:pointer;transition:border-color .2s
+    }
+    .method.active{border-color:var(--accent-2);box-shadow:0 0 0 2px rgba(56,189,248,.28) inset}
+    .method h4{margin:0 0 6px;font-size:15px}
+    .method p{margin:0;color:var(--muted);font-size:12.5px}
+
+    .qr-box{
+      display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center;margin-top:12px
+    }
+    .qr{
+      width:120px;height:120px;border-radius:10px;background:#0b132b;border:1px dashed rgba(255,255,255,.2);
+      display:flex;align-items:center;justify-content:center;overflow:hidden
+    }
+    .qr img{width:100%;height:100%;object-fit:cover}
+    .copy-row{display:flex;gap:8px;margin-top:8px}
+    .copy-btn{
+      background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.28);color:#c2f2ff;cursor:pointer;border-radius:10px;padding:8px 10px
+    }
+
+    /* Animations */
+    @keyframes floaty{from{transform:translateY(0)}50%{transform:translateY(-6px)}to{transform:translateY(0)}}
+    .brand-logo{animation:floaty 4s ease-in-out infinite}
+    .fade-in{animation:fade .35s ease both}
+    @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+    footer{max-width:1100px;margin:24px auto;padding:20px;color:var(--muted)}
+    .note{font-size:12.5px;color:#9ca3af}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true"></div>
+        <h1>ND Hotel</h1>
+      </div>
+      <div class="pill">Chandrapur • Since 2025</div>
+    </div>
+  </header>
+
+  <main class="hero">
+    <!-- Rooms showcase -->
+    <section class="card fade-in">
+      <div class="card-header">
+        <h2>Rooms</h2>
+        <span class="muted">5 rooms • Non‑AC ₹2000/day • AC ₹4000/day</span>
+      </div>
+      <div class="card-body">
+        <div class="rooms">
+          <!-- Room 1 -->
+          <div class="room">
+            <div class="room-img">
+              <img src="https://images.unsplash.com/photo-1559599238-0e5c3b87d2d6?q=80&w=1200&auto=format&fit=crop" alt="ND Hotel Deluxe Non-AC"/>
+            </div>
+            <div class="room-info">
+              <h3 class="room-title">Deluxe Non‑AC</h3>
+              <span class="badge">₹2000 / day</span>
+              <div class="price muted">Bright, budget-friendly comfort.</div>
+            </div>
+          </div>
+          <!-- Room 2 -->
+          <div class="room">
+            <div class="room-img">
+              <img src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?q=80&w=1200&auto=format&fit=crop" alt="ND Hotel Standard Non-AC"/>
+            </div>
+            <div class="room-info">
+              <h3 class="room-title">Standard Non‑AC</h3>
+              <span class="badge">₹2000 / day</span>
+              <div class="price muted">Simple and practical stay.</div>
+            </div>
+          </div>
+          <!-- Room 3 -->
+          <div class="room">
+            <div class="room-img">
+              <img src="https://images.unsplash.com/photo-1554995207-83dedae90c03?q=80&w=1200&auto=format&fit=crop" alt="ND Hotel Premium AC"/>
+            </div>
+            <div class="room-info">
+              <h3 class="room-title">Premium AC</h3>
+              <span class="badge">₹4000 / day</span>
+              <div class="price muted">Cool comfort and calm.</div>
+            </div>
+          </div>
+          <!-- Room 4 -->
+          <div class="room">
+            <div class="room-img">
+              <img src="https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=1200&auto=format&fit=crop" alt="ND Hotel Executive AC"/>
+            </div>
+            <div class="room-info">
+              <h3 class="room-title">Executive AC</h3>
+              <span class="badge">₹4000 / day</span>
+              <div class="price muted">Spacious, modern amenities.</div>
+            </div>
+          </div>
+          <!-- Room 5 -->
+          <div class="room">
+            <div class="room-img">
+              <img src="https://images.unsplash.com/photo-1505692794403-34d4982c86e0?q=80&w=1200&auto=format&fit=crop" alt="ND Hotel Family AC"/>
+            </div>
+            <div class="room-info">
+              <h3 class="room-title">Family AC</h3>
+              <span class="badge">₹4000 / day</span>
+              <div class="price muted">Comfort for small families.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Booking form -->
+    <section class="card fade-in">
+      <div class="card-header">
+        <h2>Booking form</h2>
+        <span class="muted">Fill details to unlock Pay Now</span>
+      </div>
+      <div class="card-body">
+        <form id="bookingForm">
+          <div class="grid-2">
+            <div>
+              <label for="guestName">Full name</label>
+              <input id="guestName" type="text" placeholder="e.g., Rahul Sharma" required />
+            </div>
+            <div>
+              <label for="phone">Phone</label>
+              <input id="phone" type="tel" placeholder="10-digit number" pattern="[0-9]{10}" required />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label for="checkIn">Check‑in date</label>
+              <input id="checkIn" type="date" required />
+            </div>
+            <div>
+              <label for="nights">Nights</label>
+              <input id="nights" type="number" min="1" value="1" required />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label for="roomType">Room type</label>
+              <select id="roomType" required>
+                <option value="">Select</option>
+                <option value="nonac">Non‑AC (₹2000/day)</option>
+                <option value="ac">AC (₹4000/day)</option>
+              </select>
+            </div>
+            <div>
+              <label for="roomsCount">Rooms</label>
+              <select id="roomsCount" required>
+                <option value="1">1 room</option>
+                <option value="2">2 rooms</option>
+                <option value="3">3 rooms</option>
+                <option value="4">4 rooms</option>
+                <option value="5">5 rooms</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="notes">Special requests (optional)</label>
+            <textarea id="notes" rows="2" placeholder="Early check-in, extra pillow, etc."></textarea>
+          </div>
+
+          <div class="total">
+            <div>
+              <div class="muted">Estimated total</div>
+              <div class="note">Calculated from type × rooms × nights</div>
+            </div>
+            <div class="value" id="totalPrice">₹0</div>
+          </div>
+
+          <button id="payNow" class="btn" type="button">Pay Now</button>
+        </form>
+        <div class="note" style="margin-top:10px">
+          This is a demo checkout. Replace QR and phone with your real business details. No auto-charge is done from the site.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Payment modal -->
+  <div id="paymentModal" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <strong>Complete payment</strong>
+        <button class="close" id="closeModal">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="muted">Choose a method, then pay via QR or number:</div>
+
+        <div class="pay-methods">
+          <div class="method active" data-method="gpay">
+            <h4>Google Pay</h4>
+            <p>UPI fast payments</p>
+          </div>
+          <div class="method" data-method="paytm">
+            <h4>Paytm</h4>
+            <p>Wallet/UPI cards</p>
+          </div>
+        </div>
+
+        <div id="payDetails">
+          <!-- Dynamic payment details inserted here -->
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="close" id="donePayment">I’ve paid</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="muted">ND Hotel • Chandrapur, MH • Contact: +91 98765 43210</div>
+    <div class="note">For real payments, configure your official UPI IDs and replace QR images.</div>
+  </footer>
+
+  <script>
+    // Constants
+    const PRICE_NON_AC = 2000;
+    const PRICE_AC = 4000;
+
+    // Elements
+    const bookingForm = document.getElementById('bookingForm');
+    const roomTypeEl = document.getElementById('roomType');
+    const roomsCountEl = document.getElementById('roomsCount');
+    const nightsEl = document.getElementById('nights');
+    const totalPriceEl = document.getElementById('totalPrice');
+    const payNowBtn = document.getElementById('payNow');
+
+    const paymentModal = document.getElementById('paymentModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    const donePaymentBtn = document.getElementById('donePayment');
+    const payMethods = document.querySelectorAll('.method');
+    const payDetails = document.getElementById('payDetails');
+
+    // Helpers
+    function formatINR(n){
+      return '₹' + (n || 0).toLocaleString('en-IN');
+    }
+
+    function calcTotal(){
+      const type = roomTypeEl.value;
+      const rooms = parseInt(roomsCountEl.value || '0', 10);
+      const nights = parseInt(nightsEl.value || '0', 10);
+      const rate = type === 'ac' ? PRICE_AC : (type === 'nonac' ? PRICE_NON_AC : 0);
+      const total = rate * rooms * nights;
+      totalPriceEl.textContent = formatINR(total);
+      return total;
+    }
+
+    function formValid(){
+      const name = document.getElementById('guestName').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      const checkIn = document.getElementById('checkIn').value;
+      const nights = parseInt(nightsEl.value || '0', 10);
+      const type = roomTypeEl.value;
+      const rooms = roomsCountEl.value;
+      const phoneOk = /^[0-9]{10}$/.test(phone);
+      return name && phoneOk && checkIn && nights >= 1 && type && rooms;
+    }
+
+    function togglePayButton(){
+      if (formValid()){
+        payNowBtn.style.display = 'block';
+      } else {
+        payNowBtn.style.display = 'none';
+      }
+    }
+
+    function setMinDate(){
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth()+1).padStart(2,'0');
+      const dd = String(today.getDate()).padStart(2,'0');
+      document.getElementById('checkIn').setAttribute('min', `${yyyy}-${mm}-${dd}`);
+    }
+
+    function renderPaymentDetails(method){
+      const total = calcTotal();
+      const upiId = method === 'gpay' ? '9699947748-2@ybl' : '9699947748-2@ybl';
+      const phone = method === 'gpay' ? '9699947748' : '9699947748';
+      const qrPlaceholder = method === 'gpay'
+        ? 'https://images.unsplash.com/photo-1627471076854-f4859be2c497?q=80&w=600&auto=format&fit=crop'
+        : 'https://images.unsplash.com/photo-1620323938080-10cc6b49ce63?q=80&w=600&auto=format&fit=crop';
+
+      payDetails.innerHTML = `
+        <div class="total" style="margin-bottom:10px">
+          <div><div class="muted">Amount due</div></div>
+          <div class="value">${formatINR(total)}</div>
+        </div>
+
+        <div class="qr-box">
+          <div class="qr">
+            <img src="${qrPlaceholder}" alt="Scan to pay ${method.toUpperCase()}"/>
+          </div>
+          <div>
+            <div><strong>Scan QR</strong> with ${method.toUpperCase()} to pay the exact amount.</div>
+            <div class="muted" style="margin-top:6px">If QR fails, use UPI ID or phone number below.</div>
+
+            <div class="copy-row">
+              <button class="copy-btn" data-copy="${upiId}">Copy UPI: ${upiId}</button>
+              <button class="copy-btn" data-copy="${phone}">Copy Number: ${phone}</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:10px">
+          After payment, click “I’ve paid”. Reception will verify and confirm your booking.
+        </div>
+      `;
+    }
+
+    // Event wiring
+    ['input','change'].forEach(evt => {
+      bookingForm.addEventListener(evt, () => {
+        calcTotal();
+        togglePayButton();
+      });
+    });
+
+    setMinDate();
+    calcTotal();
+    togglePayButton();
+
+    payNowBtn.addEventListener('click', () => {
+      paymentModal.style.display = 'flex';
+      renderPaymentDetails(document.querySelector('.method.active').dataset.method);
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      paymentModal.style.display = 'none';
+    });
+
+    donePaymentBtn.addEventListener('click', () => {
+      paymentModal.style.display = 'none';
+      alert('Thank you! Your payment will be verified shortly. A confirmation message will be sent to your phone.');
+    });
+
+    payMethods.forEach(m => {
+      m.addEventListener('click', () => {
+        payMethods.forEach(x => x.classList.remove('active'));
+        m.classList.add('active');
+        renderPaymentDetails(m.dataset.method);
+      });
+    });
+
+    // Copy buttons
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('.copy-btn');
+      if (!btn) return;
+      const text = btn.getAttribute('data-copy');
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = btn.textContent.includes('UPI') ? `Copy UPI` : `Copy Number`, 1200);
+      }).catch(() => {
+        alert('Copy failed. Please copy manually: ' + text);
+      });
+    });
+  </script>
+</body>
+</html>
